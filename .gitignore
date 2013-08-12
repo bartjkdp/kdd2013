@@ -1,3 +1,4 @@
 data/*.csv
 memory/*.m
 venv
+.DS_Store
