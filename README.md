@@ -13,9 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 # System requirements
-Tested on a 2.3Ghz Intel Core i5 16GB memory.
+Tested on a 2.3Ghz Intel Core i5 with 16GB memory.
 Python 2.7.5+ with the following packages:
  - scikit-learn
  - numpy
  - scipy
  - jellyfish
+
+# Using the package
+Put the original contest data (Author.csv, Conference.csv, Journal.csv, Paper.csv, PaperAuthor.csv, Train.csv, Test.csv, Valid.csv, ValidSolution.csv) in the folder data/. Then run model.py to start calculation.
+
