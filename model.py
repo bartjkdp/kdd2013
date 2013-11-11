@@ -10,7 +10,7 @@ import evaluate
 
 print '================================================================'
 print 'KDD Cup 2013 - Track 1'
-print 'Model by "Pinguin op een ijsschots"'
+print 'Model by Bart Jeukendrup'
 print '================================================================'
 print 'Step 1/6: Reading CSV files to memory & pre-process data'
 print '================================================================'
