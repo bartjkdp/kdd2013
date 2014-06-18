@@ -19,7 +19,14 @@ Python 2.7.5+ with the following packages:
  - numpy
  - scipy
  - jellyfish
+ - nltk
+
+Install all packages in one batch with:
+
+```
+pip install -r requirements.txt
+```
 
 # Using the script
-Put the original contest data (Author.csv, Conference.csv, Journal.csv, Paper.csv, PaperAuthor.csv, Train.csv, Test.csv, Valid.csv, ValidSolution.csv) in the folder data/. Then run model.py to start calculation.
+Put the original contest data (Author.csv, Conference.csv, Journal.csv, Paper.csv, PaperAuthor.csv, Train.csv, Test.csv, Valid.csv, ValidSolution.csv) in the folder data/. Then run model.py to start.
 

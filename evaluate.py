@@ -1,3 +1,9 @@
+"""
+evaluate.py
+Bart J - 2014-06-01.
+KDD Cup 2013 Track 1
+"""
+
 import csv
 import numpy as np
 from collections import OrderedDict
@@ -37,7 +43,7 @@ def apk(actual, predicted, k=10):
 
     if not actual:
         return 1.0
-
+        
     return score / min(len(actual), k)
 
 

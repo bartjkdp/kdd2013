@@ -1,174 +1,173 @@
+"""
+IO.py
+Bart J - 2014-06-01.
+KDD Cup 2013 Track 1
+"""
+
 import csv
 import marshal
+import numpy as np
 import os.path
 import PreProcess
-
-from ProgressBar import *
-
+import __builtin__
+import scipy.io as sio
+from scipy.sparse import csr_matrix
+from scipy.sparse import dok_matrix
 from collections import defaultdict
 from collections import OrderedDict
-from itertools import groupby
 
 def readAuthors():
 	print 'Reading authors...'
 
-	if os.path.isfile('memory/authors.m'):
-		f = open("memory/authors.m","rb")
-		return marshal.load(f)
+	authors = readCache('authors')
+	if not authors:
+		f = open('data/Author.csv')
+		reader = csv.DictReader(f,delimiter=',', skipinitialspace=True)
+		authors = {}
+		
+		for i,data in enumerate(reader):
+			authors[int(data['Id'])] = {'name': data['Name'], 'affiliation': data['Affiliation']}
 		f.close()
+		writeCache('authors', authors)
 
-	f = open('data/Author.csv')
-	reader = csv.DictReader(f,delimiter=',', skipinitialspace=True)
-	authors = {}
-	
-	for i,data in enumerate(reader):
-		authors[int(data['Id'])] = {'name': data['Name'], 'affiliation': data['Affiliation']}
-	f.close()
-	
-	print 'Dumping authors...'
-	f = open("memory/authors.m","wb")
-	marshal.dump(authors, f)
-	f.close()
-	
-	return authors
+	__builtin__.authors = authors
+	return True
 
 def readVenues():
 	print 'Reading venues...'
 	
-	if os.path.isfile('memory/venues.m'):
-		f = open("memory/venues.m","rb")
-		return marshal.load(f)
-		f.close()
+	venues = readCache('venues')
+	if not venues:
+		f = open('data/Journal.csv')
+		reader = csv.DictReader(f,delimiter=',', skipinitialspace=True)
+		venues = {}
+	        
+		for i,data in enumerate(reader):
+			venues['j' + str(data['Id'])] = {'sname': data['ShortName'], 'name': data['FullName']}
 
-	f = open('data/Journal.csv')
-	reader = csv.DictReader(f,delimiter=',', skipinitialspace=True)
-	venues = {}
-        
-	for i,data in enumerate(reader):
-		venues['j' + str(data['Id'])] = {'sname': data['ShortName'], 'name': data['FullName']}
-
-	f = open('data/Conference.csv')
-	reader = csv.DictReader(f,delimiter=',', skipinitialspace=True)
-	
-	for i,data in enumerate(reader):
-		venues['c' + str(data['Id'])] = {'sname': data['ShortName'], 'name': data['FullName']}
+		f = open('data/Conference.csv')
+		reader = csv.DictReader(f,delimiter=',', skipinitialspace=True)
 		
-	f.close()
+		for i,data in enumerate(reader):
+			venues['c' + str(data['Id'])] = {'sname': data['ShortName'], 'name': data['FullName']}
+		
+		f.close()
+		writeCache('venues', venues)
 	
-	print 'Dumping venues...'
-	f = open("memory/venues.m","wb")
-	marshal.dump(venues, f)
-	f.close()
-	
-	return venues
+	__builtin__.venues = venues
+	return True
 
 def readPapers():
 	print 'Reading papers...'
-	
-	if os.path.isfile('memory/papers.m'):
-		f = open("memory/papers.m","rb")
-		return marshal.load(f)
-		f.close()
+				
+	papers = readCache('papers')
+	graphVenuepaper = readCache('graphVenuepaper')
+
+	if not papers:
+		f = open('data/Paper.csv')
+		reader = csv.DictReader(f,delimiter=',', skipinitialspace=True)
+		
+		papers = {}
+		graphVenuepaper = dok_matrix((2500000,2500000))
+
+		for i,data in enumerate(reader):
+			if int(data['JournalId']) > 0:
+				venueId = int(data['JournalId'])
+			elif int(data['ConferenceId']) > 0:
+				venueId = 25000 + int(data['ConferenceId'])
+			else:
+				venueId = 0
+	 
+			paperId = int(data['Id'])
+
+			papers[paperId] = {'title': data['Title'], 'year': data['Year'], 'venueId': venueId, 'authors': [],'keywords': data['Keyword']}
 			
-	f = open('data/Paper.csv')
-	reader = csv.DictReader(f,delimiter=',', skipinitialspace=True)
-	papers = {}
+			if venueId is not 0:
+				graphVenuepaper[venueId, paperId] = 1
 
-	for i,data in enumerate(reader):
-		if int(data['ConferenceId']) > 0:
-			venueId = 'c' + str(int(data['ConferenceId']))
-		elif int(data['JournalId']) > 0:
-			venueId = 'j' + str(int(data['JournalId']))
-		else:
-			jcid = 0
- 
-		# data['Keyword'] not added yet
-		papers[int(data['Id'])] = {'title': data['Title'], 'year': data['Year'], 'venueId': venueId, 'authors': [],'keywords': data['Keyword']}
-		
-	f.close()
-	
-	print 'Dumping papers...'
-	f = open("memory/papers.m","wb")
-	marshal.dump(papers, f)
-	f.close()
-	
-	return papers
-	
-def readPaperAuthor():
-	print 'Reading paper-author relationships...'
-	
-	if os.path.isfile('memory/paper-author.m'):
-		f = open("memory/paper-author.m","rb")
-		return marshal.load(f)
 		f.close()
-	
-	f = open('data/PaperAuthor.csv')
-	reader = csv.DictReader(f,delimiter=',', skipinitialspace=True)
-	
-	count = 1
-	paperauthor = {}
-	
-	for i,data in enumerate(reader):
-		paperid = int(data['PaperId'])
-		authorid = int(data['AuthorId'])		
 
-		if paperid in paperauthor:
-			paperauthor[paperid][authorid] = {'authorName': data['Name'], 'affiliation': data['Affiliation']}
-		else:
-			paperauthor[paperid] = {authorid: {'authorName': data['Name'], 'affiliation': data['Affiliation']}}
-		
-		# Keep user updated about the progress
-		if count == 500000:
-			print str(i)
-			count = 1
-		count += 1
-		
-	f.close()
-	
-	print 'Dumping paper-author relationships...'
-	f = open("memory/paper-author.m","wb")
-	marshal.dump(paperauthor, f)
-	f.close()
-	
-	return paperauthor
+		graphVenuepaper = graphVenuepaper.tocsr()		
 
+		writeCache('papers', papers)
+		writeCache('graphVenuepaper', graphVenuepaper)
+
+	__builtin__.papers = papers
+	__builtin__.graphVenuepaper = graphVenuepaper
+
+	return True
+	
 def readAuthorPaper():
 	print 'Reading author-paper relationships...'
 	
-	if os.path.isfile('memory/author-paper.m'):
-		f = open("memory/author-paper.m","rb")
+	authorpaper = readCache('authorpaper')
+	graphAuthorpaper = readCache('graphAuthorpaper')
+	paperauthor = readCache('paperauthor')
+
+	if not authorpaper:
+		f = open('data/PaperAuthor.csv')
+		reader = csv.DictReader(f,delimiter=',', skipinitialspace=True)
+		
+		count = 1
+		graphAuthorpaper = dok_matrix((2500000,2500000))
+		authorpaper = {}
+		paperauthor = {}
+
+		for i,data in enumerate(reader):
+			paperid = int(data['PaperId'])
+			authorid = int(data['AuthorId'])		
+			graphAuthorpaper[authorid, paperid] = 1
+
+			if paperid not in paperauthor:
+				paperauthor[paperid] = {}
+			
+			paperauthor[paperid][authorid] = {'authorName':data['Name'], 'affiliation':data['Affiliation']}
+
+			if authorid in authorpaper:
+				authorpaper[authorid].append(paperid)
+			else:
+				authorpaper[authorid] = [paperid]
+
+			# Keep user updated about the progress
+			if count == 500000:
+				print str(i)
+				count = 1
+
+			count += 1
+		f.close()
+
+		graphAuthorpaper = graphAuthorpaper.tocsr()	
+		
+		writeCache('authorpaper', authorpaper)
+		writeCache('paperauthor', paperauthor)
+		writeCache('graphAuthorpaper', graphAuthorpaper)		
+
+	__builtin__.graphAuthorpaper = graphAuthorpaper
+	__builtin__.paperauthor = paperauthor
+	__builtin__.authorpaper = authorpaper
+
+	return True
+
+def readCache(type):
+	if os.path.isfile('memory/' + type + '.m'):
+		f = open('memory/' + type + '.m','rb')
 		return marshal.load(f)
 		f.close()
-	
-	f = open('data/PaperAuthor.csv')
-	reader = csv.DictReader(f,delimiter=',', skipinitialspace=True)
-	
-	count = 1
-	authorpaper = {}
-	
-	for i,data in enumerate(reader):
-		paperid = int(data['PaperId'])
-		authorid = int(data['AuthorId'])		
+	elif os.path.isfile('memory/' + type + '.npz'):
+		load = np.load('memory/' + type + '.npz')
+		return csr_matrix((load['data'], load['indices'], load['indptr']), shape = load['shape'])
+	else:
+		return False
 
-		if authorid in authorpaper:
-			authorpaper[authorid].append(paperid)
-		else:
-			authorpaper[authorid] = [paperid]
-		
-		# Keep user updated about the progress
-		if count == 500000:
-			print str(i)
-			count = 1
-		count += 1
-		
-	f.close()
-	
-	print 'Dumping author-paper relationships...'
-	f = open("memory/author-paper.m","wb")
-	marshal.dump(authorpaper, f)
-	f.close()
-	
-	return authorpaper
+def writeCache(type, variable):
+	print 'Dumping ' + type
+
+	if isinstance(variable, dok_matrix) or isinstance(variable, csr_matrix):
+		np.savez('memory/' + type, data=variable.data, indices=variable.indices, indptr=variable.indptr, shape=variable.shape)
+	else:
+		f = open('memory/' + type + '.m','wb')
+		marshal.dump(variable, f)
+		f.close()
 
 def readTrainData():
 	print 'Reading train data...'
@@ -186,7 +185,9 @@ def readTrainData():
 			train.append({'label': 0, 'paperId': int(id), 'authorId': int(data['AuthorId'])})
 	
 	f.close()
-	return train
+	
+	__builtin__.trainData = train
+	return True
 
 def readValidData():
 	print 'Reading valid data...'
@@ -202,8 +203,9 @@ def readValidData():
 			valid.append({'paperId': int(id), 'authorId': int(data['AuthorId'])})
 	f.close()
 
-	return valid
-    
+	__builtin__.validData = valid
+	return True
+
 def writePredictions(predictions, validData):
 	authorPredictions = defaultdict(list)
 

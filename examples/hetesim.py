@@ -1,0 +1,36 @@
+"""
+hetesim.py
+Bart J - 2014-06-01.
+Calculate Hetesim measure on toy example
+"""
+
+# This code replicates the example in the paper
+# Shi, Chuan, et al. "Relevance search in heterogeneous networks." Proceedings of the 15th International Conference on Extending Database Technology. ACM, 2012.
+# Paragraph 4.4
+
+from __future__ import division
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+
+ae = np.mat('[1 1 0 0 0 0;0 0 1 1 1 0; 0 0 0 0 0 1]')
+eb = np.mat('[1 0 0 0; 0 1 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1; 0 0 0 1]')
+be = eb.transpose();
+
+ab = ae * eb;
+
+# HeteSim(A,B|AB), before normalization
+pae = (ae/ae.sum(axis=1))
+pbe = (be/be.sum(axis=1))
+
+#print pae * pbe.transpose()
+
+# HeteSim(A,A|ABA), before normalization
+pab = (ab/ab.sum(axis=1))
+#print pab * pab.transpose()
+
+# HeteSim(A,B|AB), after normalization
+#print cosine_similarity(pae, pbe)
+
+# HeteSim(A,A|ABA), after normalization
+print cosine_similarity(pab, pab)
+print cosine_similarity(pab[1,:], pab[0,:])
