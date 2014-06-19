@@ -12,19 +12,27 @@ import nltk
 import __builtin__
 from sklearn.feature_extraction.text import TfidfVectorizer	
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics.pairwise import linear_kernel
 from math import sqrt
 from numpy.linalg import norm
+from numpy import mean
 
 def allFeatures(authorId, paperId):
 	features = []
 
+	# Normal count and percentage attributes
 	features.append(numberOfAuthorPaperPairs(authorId, paperId))
+	features.append(numberAuthors(authorId, paperId))
+	features.append(papersSameJournal(authorId, paperId))	
+	features.append(commonAffiliations(authorId, paperId))
+
+	# Text related attributes (distances & counts)
 	features.append(jaroWinklerDistanceAuthorPaper(authorId, paperId))
 	features.append(jaroWinklerDistanceAffiliation(authorId, paperId))	
-	#features.append(publicationYearDiff(authorId, paperId))
-	#features.append(hetesimAPV(authorId, paperId))
-	#features.append(hetesimAPVP(authorId, paperId))
-	#features.append(tfidfPaperAuthorPapers(authorId, paperId))
+	features.append(countVectPaperAuthorPapers(authorId, paperId))
+
+	# Network analysis attributes
+	features.append(hetesimAPV(authorId, paperId))	
 
 	return features
 
@@ -32,6 +40,38 @@ def numberOfAuthorPaperPairs(authorId, paperId):
 	authors = __builtin__.authors
 	authorpaper = __builtin__.authorpaper
 	return authorpaper[authorId].count(paperId)
+
+def numberAuthors(authorId, paperId):
+	return len(paperauthor[paperId])
+
+def papersSameJournal(authorId, paperId):
+	authors = __builtin__.authors
+	authorpaper = __builtin__.authorpaper
+
+	venueId = papers[paperId]['venueId']
+	if not venueId:
+		return 0
+
+	count = 0
+	for paperid in authorpaper[authorId]:
+		if paperid in papers and papers[paperid]['venueId'] == venueId:
+			count += 1
+
+	return count
+
+def commonAffiliations(authorId, paperId):
+	paperauthor = __builtin__.paperauthor
+	
+	paperWords = paperauthor[paperId][authorId]['affiliation'].split()
+
+	if len(paperWords) == 0:
+		return 0
+
+	average = []
+	for author in paperauthor[paperId]:
+		average.append(len(set(paperWords) & set(paperauthor[paperId][author]['affiliation'].split())) / len(paperWords))
+
+	return mean(average)
 
 def jaroWinklerDistanceAuthorPaper(authorId, paperId):
 	authors = __builtin__.authors
@@ -53,22 +93,9 @@ def jaroWinklerDistanceAffiliation(authorId, paperId):
 	else:
 		return 0.5
 
-def publicationYearDiff(authorId, paperId):
-	authorpaper = __builtin__.authorpaper
-	papers = __builtin__.papers
-
-	paperids = authorpaper[authorId]
-	years = []
-	for paperid in paperids:
-		if paperid not in papers:
-			continue
-		if papers[paperid]['year']:
-			years.append(int(papers[paperid]['year']))
-
-	if len(years) == 0 or int(papers[paperId]['year']) == 0:
-		return 0
-	else:
-		return abs((sum(years)/len(years)) - int(papers[paperId]['year']))
+def countVectPaperAuthorPapers(authorId, paperId):
+	corpus = __builtin__.corpus
+	return mean(linear_kernel(corpus[paperId], corpus[authorpaper[authorId]]).flatten())
 
 def hetesimAPV(authorId, paperId):
 	if paperId not in __builtin__.papers:
@@ -79,57 +106,7 @@ def hetesimAPV(authorId, paperId):
 	if venueId == 0:
 		return 0.5	
 	
-	pappv = __builtin__.graphPappv
-
-	return pappv[paperId,venueId]
-
-def hetesimAPVP(authorId, paperId):
-	if paperId not in __builtin__.papers:
-		return 0.5
-
-	venueId = __builtin__.papers[paperId]['venueId']
-
-	if venueId == 0:
-		return 0.5
-
 	pap = __builtin__.graphPap
 	pvp = __builtin__.graphPvp
 
-	return cosine_similarity(pap[authorId,:],pvp[venueId,:])
-
-
-__builtin__.authorTfidf = {}
-def tfidfPaperAuthorPapers(authorId, paperId):
-	global authorTfidf
-
-	if authorId not in __builtin__.authorTfidf:
-		papers = __builtin__.papers
-		authorpaper = __builtin__.authorpaper
-
-		stopwords = nltk.corpus.stopwords.words('english')
-		vectorizer = TfidfVectorizer(stop_words = stopwords, min_df=1)
-
-		analyse = []
-		for paper in authorpaper[authorId]:
-			analyse.append(papers[paper]['title'] + ' ' + papers[paper]['keywords'])
-
-		vectorizer.fit_transform(analyse)
-		authorTfidf[authorId] = vectorizer
-
-	vectorizer = authorTfidf[authorId]
-
-	analyse = []
-	for paper in authorpaper[authorId]:
-		analyse.append(papers[paper]['title'] + ' ' + papers[paper]['keywords'])
-
-	currentAuthorPapers = vectorizer.transform(analyse)
-	currentPaper = vectorizer.transform(papers[paperId]['title'] + ' ' + papers[paperId]['keywords'])
-	
-	cosSim = 0
-	i = 0
-
-	for currentAuthorPaper in currentAuthorPapers:
-		cosSim = cosSim + float(cosine_similarity(currentPaper, currentAuthorPaper))
-		i = i + 1
-
-	return cosSim/i
+	return graphPapvp[authorId, venueId]

@@ -4,9 +4,10 @@ Bart J - 2014-06-01.
 KDD Cup 2013 Track 1
 """
 from __future__ import division
-from lib import GenerateFeatures
 from lib import IO
 from lib import PreProcess
+from lib import InitialCalculation
+from lib import GenerateFeatures
 from time import sleep
 from itertools import izip
 from sklearn.ensemble import RandomForestClassifier
@@ -34,35 +35,25 @@ def Step1():
 	IO.readTrainData()
 	IO.readValidData()
 
-	#__builtin__.authors = PreProcess.authors(__builtin__.authors)
-	#__builtin__.papers = PreProcess.papers(__builtin__.papers)
-	#__builtin__.venues = PreProcess.venues(__builtin__.venues)
-	#__builtin__.paperauthor = PreProcess.paperauthors(__builtin__.paperauthor)
+	__builtin__.authors = PreProcess.authors(__builtin__.authors)
+	__builtin__.papers = PreProcess.papers(__builtin__.papers)
+	__builtin__.venues = PreProcess.venues(__builtin__.venues)
+	__builtin__.paperauthor = PreProcess.paperauthors(__builtin__.paperauthor)
 
 def Step2():
 	print '================================================================'
-	print 'Step 2/6: Generating features'
+	print 'Step 2/6: Initial feature calculation'
 	print '================================================================'
-	
+
+	InitialCalculation.calculate()
+
+	print '================================================================'
+	print 'Step 3/6: Generating features'
+	print '================================================================'
+
 	trainLabels = []
 	trainFeatures = []
 	validFeatures = []
-
-	print 'Generating adjecency and probability transition matrixes...'
-	ap = __builtin__.graphAuthorpaper
-	pap = normalize(ap,'l2',1)
-
-	vp = __builtin__.graphVenuepaper
-	pvp = normalize(vp,'l2',1)
-
-	pv = __builtin__.graphVenuepaper.transpose()
-
-	# Translate adjecency matrix to probability transition matrix
-	__builtin__.graphPap = pap
-	__builtin__.graphPvp = pvp
-
-	__builtin__.graphPappv = normalize(ap * pv,'l2',1)
-	__builtin__.graphPvppv = normalize(vp * pv,'l2',1)
 
 	print 'Generating features for train data...'
 
@@ -75,25 +66,21 @@ def Step2():
 		validFeatures.append(GenerateFeatures.allFeatures(validRow['authorId'], validRow['paperId']))
 
 	print '================================================================'
-	print 'Step 3/6: Training models'
+	print 'Step 4/6: Training models'
 	print '================================================================'
 
-	rfClassifier = RandomForestClassifier(n_estimators=50, verbose=1, n_jobs=1, min_samples_split=10, random_state=1)
+	rfClassifier = RandomForestClassifier(n_estimators=100, verbose=1, n_jobs=-1, min_samples_split=10, random_state=1)
 	rfClassifier.fit(trainFeatures, trainLabels)
 
-	gbClassifier = GradientBoostingClassifier(n_estimators=100, verbose=1, learning_rate=1.0, max_depth=1, random_state=0)
+	gbClassifier = GradientBoostingClassifier(n_estimators=100, verbose=1, learning_rate=1.0, max_depth=3, random_state=0)
 	gbClassifier.fit(trainFeatures, trainLabels)
 
 	print '================================================================'
-	print 'Step 4/6: Applying models'
+	print 'Step 5/6: Applying models'
 	print '================================================================'
 
 	rfPredictions = list(rfClassifier.predict_proba(validFeatures)[:,1])
 	gbPredictions = list(gbClassifier.predict_proba(validFeatures)[:,1])
-
-	print '================================================================'
-	print 'Step 5/6: Calculating ensemble'
-	print '================================================================'
 
 	print 'Taking the weighted average of the two models'
 	predictions = []

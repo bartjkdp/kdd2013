@@ -1,7 +1,7 @@
 data/*.csv
-data-original/*.csv
-data-original-backup/*.csv
-data-subset/*.csv
+data-original/*
+data-original-backup/*
+data-subset/*
 memory/*
 venv
 .DS_Store
