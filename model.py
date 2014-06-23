@@ -35,18 +35,18 @@ def Step1():
 	IO.readTrainData()
 	IO.readValidData()
 
-	__builtin__.authors = PreProcess.authors(__builtin__.authors)
-	__builtin__.papers = PreProcess.papers(__builtin__.papers)
-	__builtin__.venues = PreProcess.venues(__builtin__.venues)
-	__builtin__.paperauthor = PreProcess.paperauthors(__builtin__.paperauthor)
+	#__builtin__.authors = PreProcess.authors(__builtin__.authors)
+	#__builtin__.papers = PreProcess.papers(__builtin__.papers)
+	#__builtin__.venues = PreProcess.venues(__builtin__.venues)
+	#_builtin__.paperauthor = PreProcess.paperauthors(__builtin__.paperauthor)
 
-def Step2():
 	print '================================================================'
 	print 'Step 2/6: Initial feature calculation'
 	print '================================================================'
 
-	InitialCalculation.calculate()
+	#InitialCalculation.calculate()
 
+def Step2():
 	print '================================================================'
 	print 'Step 3/6: Generating features'
 	print '================================================================'

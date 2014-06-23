@@ -7,60 +7,63 @@ from __future__ import division
 import __builtin__
 from sklearn.preprocessing import normalize
 from sklearn.feature_extraction.text import CountVectorizer
-from scipy.sparse import csr_matrix
+from scipy.sparse import coo_matrix, csr_matrix, dok_matrix
 import itertools
 
 def calculate():
 	calculateAdjecency()
-	calculateCountVectorizer()
+	#calculateCountVectorizer()
 
 def calculateAdjecency():
 	print 'Generating adjecency and probability transition matrixes...'
 	ap = __builtin__.graphAuthorpaper
-	pap = normalize(ap,'l2',1)
-
-	pa = ap.transpose()
-	ppa = normalize(pa,'l2',1)
-
+	prob_ap = normalize(ap,norm='l1',axis=1)
 	vp = __builtin__.graphVenuepaper
-	pvp = normalize(vp,'l2',1)
+	prob_vp = normalize(vp,norm='l1',axis=1)
 
-	[pm, ma] = createMiddleObject(pa)
-	
-	ppm = normalize(pm,'l2',1)
-	pma = normalize(ma,'l2',1)
+	# HeteSim A-P-V (identical to A-P-V-P)
+	__builtin__.graph_hetesim_apv = prob_ap.dot(prob_vp.transpose())
+
+	# HeteSim A-P-M-A-P (similarity through co-author)
+	pa = ap.transpose()
+	prob_pa = normalize(pa,norm='l1',axis=1)
+
+	#[pm, ma] = createMiddleObject(pa)
+	pm = __builtin__.pm
+	ma = __builtin__.ma
+	prob_pm = normalize(pm,norm='l1',axis=1)
 
 	am = ma.transpose()
-	pam = normalize(am,'l2',1)
+	prob_am = normalize(am,norm='l1',axis=1)
+	
+	prob_appm = prob_ap.dot(prob_pm)
+	prob_paam = prob_pa.dot(prob_am)
 
-	# Translate adjecency matrix to probability transition matrix
-	__builtin__.graphPap = pap
-	__builtin__.graphPpa = ppa
-	__builtin__.graphPvp = pvp
+	__builtin__.graph_hetesim_apmap = prob_appm.dot(prob_paam.transpose())
 
-	pappm = pap.dot(ppm)
-	ppaam = ppa.dot(pam)
+	# HeteSim A-P-A-P-V (similarity through co-author published in the same venue)
+	prob_appa = prob_ap.dot(prob_pa)
+	prob_vppa = prob_vp.dot(prob_pa)
 
-	__builtin__.graphPappmpaam = pappm.dot(ppaam.transpose())
-	__builtin__.graphPapvp = pap.dot(pvp.transpose())
+	__builtin__.graph_hetesim_apapv = prob_appa.dot(prob_vppa.transpose())
 
-def createMiddleObject(matrix):
-	matrix = matrix.tocoo()
+def createMiddleObject(mat):
+	mat = coo_matrix(mat)
 
-	m1 = csr_matrix((matrix.shape[0],len(matrix.data)))
-	m2 = csr_matrix((len(matrix.data),matrix.shape[1]))
+	m1 = dok_matrix((mat.shape[0],len(mat.data)))
+	m2 = dok_matrix((len(mat.data),mat.shape[1]))
 
 	i=0
-	for j,k,v in itertools.izip(matrix.row, matrix.col, matrix.data):
+	for j,k,v in itertools.izip(mat.row, mat.col, mat.data):
 		m1[j,i] = 1
 		m2[i,k] = 1
 		i+=1
 
-	return [m1, m2]
+	return [m1.tocsr(), m2.tocsr()]
 
 def calculateCountVectorizer():
 	print 'Generating count vectorizer...'
-	corpus = {}
+	corpus = []
 	for paper in papers:
 		corpus.append(papers[paper]['title'].lower() + ' ' + papers[paper]['keywords'].lower())
 
