@@ -124,5 +124,5 @@ def hetesimAPAPV(authorId, paperId):
 	return graph_hetesim_apapv[authorId, venueId]
 
 def hetesimAPMAP(authorId, paperId):
-	graph_hetesim_apmap __builtin__.graph_hetesim_apmap
+	graph_hetesim_apmap = __builtin__.graph_hetesim_apmap
 	return graph_hetesim_apmap[authorId, paperId]
