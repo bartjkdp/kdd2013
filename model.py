@@ -27,24 +27,24 @@ def Step1():
 	print 'Step 1/6: Reading CSV files to memory & pre-process data'
 	print '================================================================'
 
-	#IO.readAuthors()
-	#IO.readVenues()
+	IO.readAuthors()
+	IO.readVenues()
 	IO.readPapers()
 	IO.readAuthorPaper()
 
 	IO.readTrainData()
 	IO.readValidData()
 
-	#__builtin__.authors = PreProcess.authors(__builtin__.authors)
-	#__builtin__.papers = PreProcess.papers(__builtin__.papers)
-	#__builtin__.venues = PreProcess.venues(__builtin__.venues)
-	#_builtin__.paperauthor = PreProcess.paperauthors(__builtin__.paperauthor)
+	__builtin__.authors = PreProcess.authors(__builtin__.authors)
+	__builtin__.papers = PreProcess.papers(__builtin__.papers)
+	__builtin__.venues = PreProcess.venues(__builtin__.venues)
+	_builtin__.paperauthor = PreProcess.paperauthors(__builtin__.paperauthor)
 
 	print '================================================================'
 	print 'Step 2/6: Initial feature calculation'
 	print '================================================================'
 
-	#InitialCalculation.calculate()
+	InitialCalculation.calculate()
 
 def Step2():
 	print '================================================================'
