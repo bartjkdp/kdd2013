@@ -27,6 +27,8 @@ Install all packages in one batch with:
 pip install -r requirements.txt
 ```
 
+Computation time ~1 hour
+
 # Using the script
 Put the original contest data (Author.csv, Conference.csv, Journal.csv, Paper.csv, PaperAuthor.csv, Train.csv, Test.csv, Valid.csv, ValidSolution.csv) in the folder data/. Then run model.py to start.
 
