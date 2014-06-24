@@ -27,8 +27,8 @@ def Step1():
 	print 'Step 1/6: Reading CSV files to memory & pre-process data'
 	print '================================================================'
 
-	IO.readAuthors()
-	IO.readVenues()
+	#IO.readAuthors()
+	#IO.readVenues()
 	IO.readPapers()
 	IO.readAuthorPaper()
 

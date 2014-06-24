@@ -30,7 +30,7 @@ pae = (ae/ae.sum(axis=1))
 pbe = (be/be.sum(axis=1))
 pae = normalize(ae,norm='l1',axis=1)
 pbe = normalize(be,norm='l1',axis=1)
-print pae * pbe.transpose()
+#print pae * pbe.transpose()
 
 # HeteSim(A,A|ABA), before normalization
 pab = (ab/ab.sum(axis=1))
@@ -40,6 +40,6 @@ pab = (ab/ab.sum(axis=1))
 #print cosine_similarity(pae, pbe)
 
 # HeteSim(A,A|ABA), after normalization
-#print cosine_similarity(pab, pab)
+print cosine_similarity(pab, pab)
 #print cosine_similarity(pab[1,:], pab[0,:])
 #print cosine_similarity(pap,pvp)

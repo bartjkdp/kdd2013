@@ -103,7 +103,7 @@ def readAuthorPaper():
 	authorpaper = readCache('authorpaper')
 	graphAuthorpaper = readCache('graphAuthorpaper')
 	paperauthor = readCache('paperauthor')
-
+	
 	if not authorpaper:
 		f = open('data/PaperAuthor.csv')
 		reader = csv.DictReader(f,delimiter=',', skipinitialspace=True)
@@ -169,7 +169,7 @@ def writeCache(type, variable):
 		marshal.dump(variable, f)
 		f.close()
 
-def readTrainData(readPart = True):
+def readTrainData():
 	print 'Reading train data...'
 	# Return values on papers of the training-set
 
@@ -178,10 +178,6 @@ def readTrainData(readPart = True):
 	train = []
 
 	for i,data in enumerate(reader):
-		# Stop after 50 training instances, for quick testing purposes
-		if readPart == True and i > 50:
-			break
-
 		for id in data['ConfirmedPaperIds'].split():
 			train.append({'label': 1, 'paperId': int(id), 'authorId': int(data['AuthorId'])})
 

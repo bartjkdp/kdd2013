@@ -21,21 +21,21 @@ def allFeatures(authorId, paperId):
 	features = []
 
 	# Normal count and percentage attributes
-	#features.append(numberOfAuthorPaperPairs(authorId, paperId))
-	#features.append(numberAuthors(authorId, paperId))
-	#features.append(papersSameJournal(authorId, paperId))	
-	#features.append(commonAffiliations(authorId, paperId))
+	features.append(numberOfAuthorPaperPairs(authorId, paperId))
+	features.append(numberAuthors(authorId, paperId))
+	features.append(papersSameJournal(authorId, paperId))	
+	features.append(commonAffiliations(authorId, paperId))
 
 	# Text related attributes (distances & counts)
-	#features.append(jaroWinklerDistanceAuthorPaper(authorId, paperId))
-	#features.append(jaroWinklerDistanceAffiliation(authorId, paperId))	
-	#features.append(countVectPaperAuthorPapers(authorId, paperId))
+	features.append(jaroWinklerDistanceAuthorPaper(authorId, paperId))
+	features.append(jaroWinklerDistanceAffiliation(authorId, paperId))	
+	features.append(countVectPaperAuthorPapers(authorId, paperId))
 
 	# Network analysis attributes
-	#features.append(hetesimAPV(authorId, paperId))	
-	#features.append(hetesimAPAPV(authorId, paperId))
+	features.append(hetesimAPV(authorId, paperId))	
+	features.append(hetesimAPAPV(authorId, paperId))
 	features.append(hetesimAPMAP(authorId, paperId))
-
+	
 	return features
 
 def numberOfAuthorPaperPairs(authorId, paperId):
@@ -106,7 +106,7 @@ def hetesimAPV(authorId, paperId):
 	venueId = __builtin__.papers[paperId]['venueId']
 
 	if venueId == 0:
-		return 0.5	
+		return 0.5
 	
 	graph_hetesim_apv = __builtin__.graph_hetesim_apv
 	return graph_hetesim_apv[authorId, venueId]
